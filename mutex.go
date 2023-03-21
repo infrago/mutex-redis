@@ -20,9 +20,8 @@ type (
 		mutex   sync.RWMutex
 		actives int64
 
-		name    string
-		config  mutex.Config
-		setting redisSetting
+		instance *mutex.Instance
+		setting  redisSetting
 
 		client *redis.Pool
 	}
@@ -42,35 +41,35 @@ type (
 )
 
 // 连接
-func (driver *redisDriver) Connect(name string, config mutex.Config) (mutex.Connect, error) {
+func (driver *redisDriver) Connect(inst *mutex.Instance) (mutex.Connect, error) {
 	//获取配置信息
 	setting := redisSetting{
 		Server: "127.0.0.1:6379", Password: "", Database: "",
 		Idle: 30, Active: 100, Timeout: 240,
 	}
 
-	if vv, ok := config.Setting["server"].(string); ok && vv != "" {
+	if vv, ok := inst.Config.Setting["server"].(string); ok && vv != "" {
 		setting.Server = vv
 	}
-	if vv, ok := config.Setting["password"].(string); ok && vv != "" {
+	if vv, ok := inst.Config.Setting["password"].(string); ok && vv != "" {
 		setting.Password = vv
 	}
 
 	//数据库，redis的0-16号
-	if v, ok := config.Setting["database"].(string); ok {
+	if v, ok := inst.Config.Setting["database"].(string); ok {
 		setting.Database = v
 	}
 
-	if vv, ok := config.Setting["idle"].(int64); ok && vv > 0 {
+	if vv, ok := inst.Config.Setting["idle"].(int64); ok && vv > 0 {
 		setting.Idle = int(vv)
 	}
-	if vv, ok := config.Setting["active"].(int64); ok && vv > 0 {
+	if vv, ok := inst.Config.Setting["active"].(int64); ok && vv > 0 {
 		setting.Active = int(vv)
 	}
-	if vv, ok := config.Setting["timeout"].(int64); ok && vv > 0 {
+	if vv, ok := inst.Config.Setting["timeout"].(int64); ok && vv > 0 {
 		setting.Timeout = time.Second * time.Duration(vv)
 	}
-	if vv, ok := config.Setting["timeout"].(string); ok && vv != "" {
+	if vv, ok := inst.Config.Setting["timeout"].(string); ok && vv != "" {
 		td, err := util.ParseDuration(vv)
 		if err == nil {
 			setting.Timeout = td
@@ -78,7 +77,7 @@ func (driver *redisDriver) Connect(name string, config mutex.Config) (mutex.Conn
 	}
 
 	return &redisConnect{
-		name: name, config: config, setting: setting,
+		instance: inst, setting: setting,
 	}, nil
 }
 
@@ -150,7 +149,7 @@ func (connect *redisConnect) Lock(key string, expiry time.Duration) error {
 	value := fmt.Sprintf("%d", time.Now().UnixNano())
 
 	if expiry <= 0 {
-		expiry = connect.config.Expiry
+		expiry = connect.instance.Config.Expiry
 	}
 
 	args := []Any{
