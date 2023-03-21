@@ -1,2 +1,2 @@
 # mutex-redis
-infra.go redis mutex driver.
+infra.Go redis mutex driver.
