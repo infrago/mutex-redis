@@ -139,7 +139,7 @@ func (connect *redisConnect) Close() error {
 	return nil
 }
 
-func (connect *redisConnect) Lock(key string, expiry time.Duration) error {
+func (connect *redisConnect) Lock(key string, expire time.Duration) error {
 	if connect.client == nil {
 		return errors.New("连接失败")
 	}
@@ -148,12 +148,12 @@ func (connect *redisConnect) Lock(key string, expiry time.Duration) error {
 
 	value := fmt.Sprintf("%d", time.Now().UnixNano())
 
-	if expiry <= 0 {
-		expiry = connect.instance.Config.Expiry
+	if expire <= 0 {
+		expire = connect.instance.Config.Expire
 	}
 
 	args := []Any{
-		key, value, "NX", "PX", expiry.Milliseconds(),
+		key, value, "NX", "PX", expire.Milliseconds(),
 	}
 
 	res, err := redis.String(conn.Do("SET", args...))
