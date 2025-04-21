@@ -1,3 +1,3 @@
 module github.com/infrago/mutex-redis
 
-go 1.17
+go 1.18
