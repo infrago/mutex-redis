@@ -1,44 +1,39 @@
 # mutex-redis
 
-`mutex-redis` 是 `mutex` 模块的 `redis` 驱动。
+`mutex-redis` 是 `github.com/infrago/mutex` 的**redis 驱动**。
 
-## 安装
+## 包定位
 
-```bash
-go get github.com/infrago/mutex@latest
-go get github.com/infrago/mutex-redis@latest
-```
+- 类型：驱动
+- 作用：把 `mutex` 模块的统一接口落到 `redis` 后端实现
 
-## 接入
+## 快速接入
 
 ```go
 import (
     _ "github.com/infrago/mutex"
     _ "github.com/infrago/mutex-redis"
-    "github.com/infrago/infra"
 )
-
-func main() {
-    infra.Run()
-}
 ```
-
-## 配置示例
 
 ```toml
 [mutex]
 driver = "redis"
 ```
 
-## 公开 API（摘自源码）
+## `setting` 专用配置项
 
-- `func (d *redisDriver) Connect(inst *mutex.Instance) (mutex.Connection, error)`
-- `func (c *redisConnect) Open() error`
-- `func (c *redisConnect) Close() error`
-- `func (c *redisConnect) Lock(key string, expire time.Duration) error`
-- `func (c *redisConnect) Unlock(key string) error`
+配置位置：`[mutex].setting`
 
-## 排错
+- `addr`
+- `server`
+- `username`
+- `user`
+- `password`
+- `pass`
+- `database`
 
-- driver 未生效：确认模块段 `driver` 值与驱动名一致
-- 连接失败：检查 endpoint/host/port/鉴权配置
+## 说明
+
+- `setting` 仅对当前驱动生效，不同驱动键名可能不同
+- 连接失败时优先核对 `setting` 中 host/port/认证/超时等参数
